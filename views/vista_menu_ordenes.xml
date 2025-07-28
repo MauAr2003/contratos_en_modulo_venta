@@ -1,0 +1,91 @@
+<odoo>
+  <data>
+    <record id="view_contrato_venta_form_cotizacion" model="ir.ui.view">
+      <field name="name">contrato.venta.form.cotizacion</field>
+      <field name="model">contrato.venta</field>
+      <field name="arch" type="xml">
+        <form string="Contrato de Venta">
+          <header>
+            <button name="action_nueva_orden"
+                    string="Nueva Orden"
+                    type="object"
+                    class="btn-primary"/>
+            <button name="action_cerrar"
+                    string="Cerrar"
+                    type="object"
+                    class="btn-primary"/>
+            <button name="action_cancelar"
+                    string="Cancelar"
+                    type="object"
+                    class="btn-secondary"/>
+          </header>
+          
+          <sheet>
+            <div class="oe_title">
+              <h1>
+                <field name="name" readonly="1"/>
+              </h1>
+            </div>
+
+            <div class="oe_button_box" name="button_box">
+              <button type="object"
+                      name="action_ver_ordenes_venta"
+                      class="oe_stat_button"
+                      icon="fa-shopping-cart"
+                      string="Ordenes de Venta">
+                <field name="sale_order_count" widget="statinfo"/>
+              </button>
+            </div>
+
+            <group col="2">
+              <group>
+                <field name="partner_id" readonly="1"/>
+                <field name="vendedor"/>
+                <field name="tipo_contrato"/>
+                <field name="currency_id" readonly="1"/>
+              </group>
+              <group>
+                <field name="fecha_inicio"/>
+                <field name="fecha_fin"/>
+                <field name="referencia"/>
+                <field name="sale_order_id" readonly="1"/>
+              </group>
+            </group>
+
+            <notebook>
+              <page string="Productos">
+                <field name="detalle_contrato" readonly="1">
+                  <list>
+                    <field name="product_id"/>
+                    <field name="descripcion" readonly="1"/>
+                    <field name="cantidad"/>
+                    <field name="ordenado"/>
+                    <field name="entregado"/>
+                    <field name="udm"/>
+                    <field name="precio"/>
+                  </list>
+                </field>
+              </page>
+            </notebook>
+          </sheet>
+
+       <chatter/>
+        </form>
+      </field>
+    </record>
+
+    <record id="action_contrato_venta_cotizacion" model="ir.actions.act_window">
+      <field name="name">Contratos</field>
+      <field name="res_model">contrato.venta</field>
+      <field name="view_mode">list,form</field>
+      <field name="target">current</field>
+    </record>
+
+   <menuitem
+      id="menu_contrato_venta_cotizacion"
+      name="Contratos"
+      parent="sale.sale_order_menu"
+      action="action_contrato_venta_cotizacion"
+      sequence="200"/>
+  </data>
+</odoo>

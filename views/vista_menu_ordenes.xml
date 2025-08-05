@@ -1,11 +1,13 @@
 <odoo>
   <data>
+
     <record id="view_contrato_venta_form_cotizacion" model="ir.ui.view">
       <field name="name">contrato.venta.form.cotizacion</field>
       <field name="model">contrato.venta</field>
       <field name="arch" type="xml">
         <form string="Contrato de Venta">
           <header>
+            <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,done" statusbar_colors="{'draft':'blue','in_progress':'orange','done':'green'}"/>
             <button name="action_nueva_orden"
                     string="Nueva Orden"
                     type="object"
@@ -13,13 +15,10 @@
             <button name="action_cerrar"
                     string="Cerrar"
                     type="object"
-                    class="btn-primary"/>
-            <button name="action_cancelar"
-                    string="Cancelar"
-                    type="object"
-                    class="btn-secondary"/>
+                    class="btn-primary"
+                    confirm="¿Estás seguro de cerrar este contrato? No se podrá revertir."/>
           </header>
-          
+
           <sheet>
             <div class="oe_title">
               <h1>
@@ -41,7 +40,6 @@
               <group>
                 <field name="partner_id" readonly="1"/>
                 <field name="vendedor"/>
-                <field name="tipo_contrato"/>
                 <field name="currency_id" readonly="1"/>
               </group>
               <group>
@@ -69,8 +67,21 @@
             </notebook>
           </sheet>
 
-       <chatter/>
+          <chatter/>
         </form>
+      </field>
+    </record>
+
+
+    <record id="view_contrato_venta_list" model="ir.ui.view">
+      <field name="name">contrato.venta.list</field>
+      <field name="model">contrato.venta</field>
+      <field name="arch" type="xml">
+        <list string="Contratos">
+          <field name="name"/>
+          <field name="partner_id"/>
+          <field name="state"/>
+        </list>
       </field>
     </record>
 
@@ -79,13 +90,15 @@
       <field name="res_model">contrato.venta</field>
       <field name="view_mode">list,form</field>
       <field name="target">current</field>
+      <!-- <field name="context">{'create': False}</field> -->
     </record>
 
-   <menuitem
+    <menuitem
       id="menu_contrato_venta_cotizacion"
       name="Contratos"
       parent="sale.sale_order_menu"
       action="action_contrato_venta_cotizacion"
       sequence="200"/>
+
   </data>
 </odoo>

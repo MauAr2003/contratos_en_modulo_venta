@@ -1,10 +1,10 @@
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError
 
 class ContratoVenta(models.Model):
     _name = 'contrato.venta'
     _description = 'Contrato de Venta'
-    _inherit = ['mail.thread','mail.activity.mixin']  # Agrega esto si no lo tienes
+    _inherit = ['mail.thread','mail.activity.mixin']  
 
     name = fields.Char(string='Contrato', required=True)
     fecha_inicio = fields.Date(string='Del',tracking=True)
@@ -17,7 +17,6 @@ class ContratoVenta(models.Model):
     vendedor = fields.Many2one('res.users', string="Vendedor" , tracking=True)
     partner_id = fields.Many2one('res.partner', string='Cliente')
     currency_id = fields.Many2one('res.currency', string='Moneda')
-
     referencia = fields.Char(string='Referencia',tracking=True)
 
     detalle_contrato = fields.One2many(
@@ -38,6 +37,12 @@ class ContratoVenta(models.Model):
         store=True
     )
 
+    state = fields.Selection([
+        ('draft', 'Iniciando'),
+        ('in_progress', 'En Proceso'),
+        ('done', 'Finalizado')
+    ], string='Estado', default='draft', tracking=True)
+
     @api.depends('sale_order_ids')
     def _compute_sale_order_count(self):
         for contrato in self:
@@ -46,24 +51,24 @@ class ContratoVenta(models.Model):
     def action_nueva_orden(self):
         self.ensure_one()
 
+        if self.state == 'done':
+            raise UserError("Este contrato ya está finalizado. No se pueden generar nuevas órdenes.")
+
         ordenes_borrador = self.sale_order_ids.filtered(lambda o: o.state == 'draft' and not o.es_base)
         if ordenes_borrador:
             raise UserError("No puedes crear una nueva orden de venta mientras existan órdenes en cotización.")
 
         order_lines = []
         for linea in self.detalle_contrato:
-            
             cantidad_restante = linea.cantidad - linea.ordenado
-
             if cantidad_restante > 0:
-                order_line = (0, 0, {
+                order_lines.append((0, 0, {
                     'product_id': linea.product_id.id,
                     'name': linea.descripcion,
                     'product_uom_qty': cantidad_restante,
                     'price_unit': linea.precio,
                     'product_uom': linea.product_id.uom_id.id,
-                })
-                order_lines.append(order_line)
+                }))
 
         if not order_lines:
             raise UserError("Se entregaron todos los productos de este contrato")
@@ -77,6 +82,10 @@ class ContratoVenta(models.Model):
             'contrato_id': self.id,
         })
 
+        
+        if self.state == 'draft':
+            self.state = 'in_progress'
+
         return {
             'type': 'ir.actions.act_window',
             'res_model': 'sale.order',
@@ -86,10 +95,10 @@ class ContratoVenta(models.Model):
         }
 
     def action_cerrar(self):
-        pass
-
-    def action_cancelar(self):
-        pass
+        self.ensure_one()
+        if self.state == 'done':
+            raise UserError("El contrato ya está cerrado.")
+        self.state = 'done'
 
     def action_ver_ordenes_venta(self):
         self.ensure_one()
@@ -100,7 +109,6 @@ class ContratoVenta(models.Model):
             'res_model': 'sale.order',
             'domain': [('contrato_id', '=', self.id), ('es_base', '=', False)],
         }
-
 
 class ContratoVentaLineas(models.Model):
     _name = 'contrato.venta.lineas'
